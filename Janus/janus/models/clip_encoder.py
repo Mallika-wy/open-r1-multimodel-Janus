@@ -27,6 +27,7 @@ from einops import rearrange
 from janus.models.siglip_vit import create_siglip_vit
 
 
+# 用于处理图像特征提取
 class CLIPVisionTower(nn.Module):
     def __init__(
         self,
@@ -58,6 +59,7 @@ class CLIPVisionTower(nn.Module):
             vision_tower_params
         )
 
+        # image normalization
         if pixel_mean is not None and pixel_std is not None:
             image_norm = torchvision.transforms.Normalize(
                 mean=pixel_mean, std=pixel_std
@@ -92,6 +94,7 @@ class CLIPVisionTower(nn.Module):
         else:
             image_features = image_forward_outs.hidden_states[self.select_layer]
 
+        # 根据 select_feature 参数选择特定的特征
         if self.select_feature == "patch":
             # if the output has cls_token
             image_features = image_features[:, 1:]
@@ -114,9 +117,10 @@ class CLIPVisionTower(nn.Module):
             image_features (torch.Tensor): [b, n_patch, d]
         """
 
+        # 如果有image_norm的话，就进行image normalization
         if self.image_norm is not None:
             images = self.image_norm(images)
 
-        image_forward_outs = self.vision_tower(images, **self.forward_kwargs)
-        image_features = self.feature_select(image_forward_outs)
+        image_forward_outs = self.vision_tower(images, **self.forward_kwargs) # 调用视觉模型进行前向传播
+        image_features = self.feature_select(image_forward_outs) # 选择特征
         return image_features

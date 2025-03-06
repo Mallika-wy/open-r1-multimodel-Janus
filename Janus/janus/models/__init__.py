@@ -21,6 +21,7 @@ from .image_processing_vlm import VLMImageProcessor
 from .modeling_vlm import MultiModalityCausalLM
 from .processing_vlm import VLChatProcessor
 
+# 定义一个 __all__ 列表，指定当前模块中对外公开的类
 __all__ = [
     "VLMImageProcessor",
     "VLChatProcessor",

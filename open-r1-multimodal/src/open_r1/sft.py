@@ -38,6 +38,7 @@ accelerate launch --config_file=configs/zero3.yaml src/open_r1/sft.py \
 from datasets import load_dataset
 from transformers import AutoTokenizer
 
+# 提供了训练和微调的工具和配置
 from trl import (
     ModelConfig,
     ScriptArguments,

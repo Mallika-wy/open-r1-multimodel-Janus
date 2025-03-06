@@ -24,22 +24,24 @@ import torch.nn as nn
 from attrdict import AttrDict
 
 
+# 实现不同类型的投影器，投影器的作用是将输入特征映射到指定的嵌入维度
 class MlpProjector(nn.Module):
     def __init__(self, cfg):
         super().__init__()
 
         self.cfg = cfg
 
-        if cfg.projector_type == "identity":
+        # 根据配置选择不同的投影器类型
+        if cfg.projector_type == "identity": # 无投影
             modules = nn.Identity()
 
-        elif cfg.projector_type == "linear":
-            modules = nn.Linear(cfg.input_dim, cfg.n_embed)
+        elif cfg.projector_type == "linear": # 线性投影
+            modules = nn.Linear(cfg.input_dim, cfg.n_embed) # 输入维度 -> 输出维度
 
-        elif cfg.projector_type == "mlp_gelu":
-            mlp_depth = cfg.get("depth", 1)
-            modules = [nn.Linear(cfg.input_dim, cfg.n_embed)]
-            for _ in range(1, mlp_depth):
+        elif cfg.projector_type == "mlp_gelu": # 多层感知机投影
+            mlp_depth = cfg.get("depth", 1) 
+            modules = [nn.Linear(cfg.input_dim, cfg.n_embed)] # 将输入特征从 input_dim 映射到 n_embed
+            for _ in range(1, mlp_depth): # 添加多个线性层和 gelu 激活函数
                 modules.append(nn.GELU())
                 modules.append(nn.Linear(cfg.n_embed, cfg.n_embed))
             modules = nn.Sequential(*modules)
@@ -73,7 +75,7 @@ class MlpProjector(nn.Module):
         Returns:
             x (torch.Tensor): [b, s, c]
         """
-
+        
         if isinstance(x_or_tuple, tuple):
             # self.cfg.projector_type == "low_high_hybrid_split_mlp_gelu":
             high_x, low_x = x_or_tuple

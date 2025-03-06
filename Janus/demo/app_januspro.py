@@ -15,17 +15,17 @@ import time
 model_path = "deepseek-ai/Janus-Pro-7B"
 config = AutoConfig.from_pretrained(model_path)
 language_config = config.language_config
-language_config._attn_implementation = 'eager'
+language_config._attn_implementation = 'eager' # 使用eager模式，动态图计算模式，其中每个操作都立即被执行，方便调试
 vl_gpt = AutoModelForCausalLM.from_pretrained(model_path,
                                              language_config=language_config,
                                              trust_remote_code=True)
 if torch.cuda.is_available():
-    vl_gpt = vl_gpt.to(torch.bfloat16).cuda()
+    vl_gpt = vl_gpt.to(torch.bfloat16).cuda() # 如果GPU可用，则使用bfloat16精度
 else:
-    vl_gpt = vl_gpt.to(torch.float16)
+    vl_gpt = vl_gpt.to(torch.float16) # 如果GPU不可用，则使用float16精度
 
-vl_chat_processor = VLChatProcessor.from_pretrained(model_path)
-tokenizer = vl_chat_processor.tokenizer
+vl_chat_processor = VLChatProcessor.from_pretrained(model_path) # 加载VLChatProcessor，预训练的多模态对话处理器
+tokenizer = vl_chat_processor.tokenizer # 获取tokenizer，文本内容分词并转换为数值索引
 cuda_device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 @torch.inference_mode()
@@ -35,7 +35,7 @@ def multimodal_understanding(image, question, seed, top_p, temperature):
     # Clear CUDA cache before generating
     torch.cuda.empty_cache()
     
-    # set seed
+    # set seed，通过设置种子，可以获得可重复的结果
     torch.manual_seed(seed)
     np.random.seed(seed)
     torch.cuda.manual_seed(seed)
@@ -172,18 +172,18 @@ def generate_image(prompt,
         
 
 # Gradio interface
-with gr.Blocks() as demo:
-    gr.Markdown(value="# Multimodal Understanding")
-    with gr.Row():
-        image_input = gr.Image()
-        with gr.Column():
-            question_input = gr.Textbox(label="Question")
-            und_seed_input = gr.Number(label="Seed", precision=0, value=42)
-            top_p = gr.Slider(minimum=0, maximum=1, value=0.95, step=0.05, label="top_p")
-            temperature = gr.Slider(minimum=0, maximum=1, value=0.1, step=0.05, label="temperature")
+with gr.Blocks() as demo: # 创建一个Blocks对象，用于组织界面布局
+    gr.Markdown(value="# Multimodal Understanding") # 添加一个Markdown组件，用于显示标题
+    with gr.Row(): # 创建一个Row对象，用于水平排列组件
+        image_input = gr.Image() # 添加一个Image组件，用于输入图片
+        with gr.Column(): # 创建一个Column对象，用于垂直排列组件
+            question_input = gr.Textbox(label="Question") # 添加一个Textbox组件，用于输入问题
+            und_seed_input = gr.Number(label="Seed", precision=0, value=42) # 添加一个Number组件，用于输入种子
+            top_p = gr.Slider(minimum=0, maximum=1, value=0.95, step=0.05, label="top_p") # 添加一个Slider组件，用于输入top_p
+            temperature = gr.Slider(minimum=0, maximum=1, value=0.1, step=0.05, label="temperature") # 添加一个Slider组件，用于输入temperature
         
-    understanding_button = gr.Button("Chat")
-    understanding_output = gr.Textbox(label="Response")
+    understanding_button = gr.Button("Chat") # 添加一个Button组件，用于触发多模态理解功能
+    understanding_output = gr.Textbox(label="Response") # 添加一个Textbox组件，用于显示多模态理解的结果
 
     examples_inpainting = gr.Examples(
         label="Multimodal Understanding examples",
@@ -198,7 +198,7 @@ with gr.Blocks() as demo:
             ],
         ],
         inputs=[question_input, image_input],
-    )
+    ) # 添加一个Examples组件，用于显示多模态理解的示例
     
         
     gr.Markdown(value="# Text-to-Image Generation")
@@ -229,6 +229,7 @@ with gr.Blocks() as demo:
         inputs=prompt_input,
     )
     
+    # 当点击understanding_button时，执行multimodal_understanding函数，传入输入参数，并返回输出结果
     understanding_button.click(
         multimodal_understanding,
         inputs=[image_input, question_input, und_seed_input, top_p, temperature],

@@ -70,10 +70,10 @@ class BatchedVLChatProcessorOutput(DictOutput):
 
 
 class VLChatProcessor(ProcessorMixin):
-    image_processor_class = "AutoImageProcessor"
-    tokenizer_class = ("LlamaTokenizer", "LlamaTokenizerFast")
+    image_processor_class = "AutoImageProcessor" # 指定图像处理器类
+    tokenizer_class = ("LlamaTokenizer", "LlamaTokenizerFast") # 指定分词器类
 
-    attributes = ["image_processor", "tokenizer"]
+    attributes = ["image_processor", "tokenizer"] # 定义属性列表
 
     system_prompt = (
         "You are a helpful language and vision assistant. "
@@ -99,6 +99,7 @@ class VLChatProcessor(ProcessorMixin):
         self.image_processor = image_processor
         self.tokenizer = tokenizer
 
+        # 检查图像标记是否已经添加到分词器中
         image_id = self.tokenizer.vocab.get(image_tag)
         if image_id is None:
             special_tokens = [image_tag]
@@ -117,6 +118,7 @@ class VLChatProcessor(ProcessorMixin):
         self.mask_prompt = mask_prompt
         self.ignore_id = ignore_id
 
+        # 调用父类的 __init__ 方法，初始化属性，这个类继承自ProcessorMixin类
         super().__init__(
             image_processor,
             tokenizer,
