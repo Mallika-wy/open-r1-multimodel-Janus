@@ -513,6 +513,11 @@ class Qwen2VLGRPOTrainer(Trainer):
             super().log(logs)
         self._metrics.clear()
 
+
+    """
+    模型卡是一种集中式、可定制的文档，用于记录模型信息，例如预期用途、风险评级、训练细节、评估指标等，
+    以实现高效的治理和报告。模型卡可以提高模型的透明度和可解释性，帮助用户理解模型的性能和潜在风险
+    """
     def create_model_card(
         self,
         model_name: Optional[str] = None,
@@ -530,6 +535,7 @@ class Qwen2VLGRPOTrainer(Trainer):
             tags (`str`, `list[str]` or `None`, *optional*, defaults to `None`):
                 Tags to be associated with the model card.
         """
+        # 确保只有主进程执行模型卡的创建和保存操作，避免多进程环境下的重复操作
         if not self.is_world_process_zero():
             return
 
@@ -538,13 +544,14 @@ class Qwen2VLGRPOTrainer(Trainer):
         else:
             base_model = None
 
-        tags = tags or []
-        if isinstance(tags, str):
+        tags = tags or [] # 为了避免tags为None时的报错
+        if isinstance(tags, str): # 如果tags是字符串，则将其转换为列表
             tags = [tags]
 
-        if hasattr(self.model.config, "unsloth_version"):
+        if hasattr(self.model.config, "unsloth_version"): # 如果模型配置中有unsloth_version属性，则将其添加到tags中
             tags.append("unsloth")
 
+        # textwrap.dedent 去除多行字符串中的缩进，生成模型的引用格式
         citation = textwrap.dedent(
             """\
             @article{zhihong2024deepseekmath,
@@ -555,6 +562,7 @@ class Qwen2VLGRPOTrainer(Trainer):
             """
         )
 
+        # 生成模型卡
         model_card = generate_model_card(
             base_model=base_model,
             model_name=model_name,
